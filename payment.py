@@ -7,7 +7,7 @@ import os
 import socket
 #import requests
 #import json
-import http.client
+#import http.client
 from PyPDF2 import PdfFileWriter, PdfFileReader
 import io
 from reportlab.pdfgen import canvas
@@ -47,15 +47,15 @@ def scancard():
     if cardnumber in ['1234','abcde']:
       response.set_cookie("account", cardnumber, secret=COOKIESECRET)
       info = {'cardnumber': cardnumber }
-      conn = http.client.HTTPSConnection("service.us.apiconnect.ibmcloud.com")
-      headers = {
-      'x-ibm-client-id': "4ce73542-13ef-4ae1-bb25-26fe9c6f5164",
-      'accept': "application/json"
-      }
-      conn.request("GET", "/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber=38383", headers=headers)
-      res = conn.getresponse()
-      data = res.read()
-      print (data)
+      #conn = http.client.HTTPSConnection("service.us.apiconnect.ibmcloud.com")
+      #headers = {
+      #'x-ibm-client-id': "4ce73542-13ef-4ae1-bb25-26fe9c6f5164",
+      #'accept': "application/json"
+      #}
+      #conn.request("GET", "/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber=38383", headers=headers)
+      #res = conn.getresponse()
+      #data = res.read()
+      #print (data)
 
       return template('message.html',info,urlnext="/pinform",percent="10",message="Valid card swiped.")
     else:

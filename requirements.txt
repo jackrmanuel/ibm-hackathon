@@ -1,2 +1,4 @@
 bottle
 requests
+PyPDF2
+reportlab
