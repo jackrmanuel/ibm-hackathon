@@ -3,6 +3,7 @@ import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
+print(result)
 
 packet = io.BytesIO()
 # create a new PDF with Reportlab
