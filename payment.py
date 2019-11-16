@@ -2,23 +2,20 @@
 import bottle
 from bottle import route, run, static_file, post, request, response, template
 import bottle
-import sys
+#import sys
 import os
 import socket
-import gitlab
-import shutil
-import uuid
-import re
-import requests
-import json
+#import requests
+#import json
 import time
+import http.client
 
 ############################################################################################################
 
 DEBUG = 'YES'
 TCP_PORT = 8080
 rootdir = os.getcwd()+"/static/"
-COOKIESECRET='ZvCXyOw4LlevVYlgEDwVPvjv42oqbHVIggzb'
+COOKIESECRET='VvCXyOw4LlevVYlgEDwVPvjv42oqbHVIggzb'
 
 # 0
 @route('/')
@@ -27,22 +24,59 @@ def root():
 
 #1
 @post('/initial')
-def messaging():
-  cardnumber = request.forms.get("form:cardnumber")
-  # check for card swipe
-  if cardnumber in ['1234','abcde']:
-    response.set_cookie("account", cardnumber, secret=COOKIESECRET)
-    # return "<meta http-equiv='refresh' content='2;url=/ambiente' /><p>Welcome! You are now logged in.</p>"
-    info = {'cardnumber': cardnumber }
-    return template('message.html',info,urlnext="/pinform",percent="10",message="Valid card swiped.")
-  else:
-    info = {'cardnumber': cardnumber }
-    #return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid card. Please swipe a valid card</p>"
-    return template('message.html',info,urlnext="/",percent=100,message="Invalid card. Please swipe a valid card.")
+def initial():
+  print ('INITIAL')
+  option = request.forms.get("form:option")
+  info = {'option': option }
+  print (option)
+  response.set_cookie("account", option, secret=COOKIESECRET)
+  return template('scancard.html',info,urlnext="/scancard",percent="10",message="continue")
+  
 
 #2
+@post('/scancard')
+def scancard():
+  print('SCAN')
+  option = request.get_cookie("account", secret=COOKIESECRET)
+  if option:
+    info = {'option': 'option' } 
+    cardnumber = request.forms.get("form:cardnumber")
+    if cardnumber in ['1234','abcde']:
+      response.set_cookie("account", cardnumber, secret=COOKIESECRET)
+      # return "<meta http-equiv='refresh' content='2;url=/ambiente' /><p>Welcome! You are now logged in.</p>"
+      info = {'cardnumber': cardnumber }
+      #conn = http.client.HTTPSConnection("service.us.apiconnect.ibmcloud.com")
+      #headers = {
+      #'x-ibm-client-id': "4ce73542-13ef-4ae1-bb25-26fe9c6f5164",
+      #'accept': "application/json"
+      #}
+      #conn.request("GET", "/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber=38383", headers=headers)
+      #res = conn.getresponse()
+      #data = res.read()
+      #print (data)
+
+      return template('message.html',info,urlnext="/pinform",percent="10",message="Valid card swiped.")
+    else:
+      info = {'cardnumber': cardnumber }
+      #return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid card. Please swipe a valid card</p>"
+      return template('message.html',info,urlnext="/",percent=100,message="Invalid card. Please swipe a valid card.")    
+      response.set_cookie("account", cardnumber, secret=COOKIESECRET)
+      return template('pinform.html',info,urlnext="/pinform",percent="10",message="Valid card swiped.")
+  else:
+    return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid card. Access denied.</p>"  
+
+  #return template('scancard.html',info)
+  return template('pinform.html',info,urlnext="/pinform",percent="10",message="Valid card swiped.")
+  print ('RETURN')
+  cardnumber = request.forms.get("form:cardnumber")
+  print (cardnumber)
+  print ('WHY')
+  # check for card swipe
+
+
 @route('/pinform')
-def restricted_area():
+def pinform():
+  print ('PIN')
   cardnumber = request.get_cookie("account", secret=COOKIESECRET)
   if cardnumber:
     info = {'cardnumber': cardnumber } 
@@ -53,6 +87,7 @@ def restricted_area():
 
 @post('/printform')
 def printform():
+  print ('PRINT FORM')
   cardnumber = request.get_cookie("account", secret=COOKIESECRET)
   if cardnumber:
     global percent, log_array, baseimage,appname,source,target,RancherProject,lob
@@ -93,15 +128,6 @@ def logout():
 @route('/static/<filepath:path>')
 def server_static(filepath):
   return static_file(filepath, root=rootdir)
-
-def check_splcharacter(test): 
-    string_check= re.compile('[@_!#$%^&*()<>?/\|}{~:]')       
-    if(string_check.search(test) == None): 
-        print("String does not contain Special Characters.")
-        return False  
-    else: 
-        print("String contains Special Characters.") 
-        return True
 
 # FIX FOR LOAD BALANCER + BOTTLE
 hostname=socket.gethostname()
