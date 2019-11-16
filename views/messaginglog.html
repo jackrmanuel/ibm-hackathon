@@ -38,25 +38,10 @@
 
     <main role="main" class="container-fluid">
         <div class="row">
-            <div class="col-md-2">
-                <a href="#" class="pull-left">
-                    <img src="/static/icbc.png" width="70" height="70" />
-                    
-
-                    
-                </a>
-            </div>
             <div class="col-md-8">
-
                 <div class="progress">
                     <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{percent}}%;" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100">{{percent}}%</div>
                 </div>
-              
-                <!--
-                    <label for="sel1"> {{message}} </label>
-                -->
-
-
 
                 % for line in message:
                     <ul>
@@ -64,42 +49,9 @@
                     </ul>
                 % end
 
-
                 <meta http-equiv='refresh' content='2;url={{urlnext}}' />                        
 
-                <!--
-                <meta http-equiv='refresh' content='2'>
-
-                
-                <meta http-equiv='refresh' content='2;url={{urlnext}}' />
-
-               
-                <form id="form" name="form" method="post" action="/userpass" enctype="application/x-www-form-urlencoded">
-                    <table class="form-group col-md-4">
-                        <tbody>
-
-                            <label for="sel1">Ambiente Docker:</label>
-                            <select class="form-control col-md-3" id="sel1" name="form:selecaoAmbiente">
-                                <option>Desenvolvimento</option>
-                                <option>Homologacao</option>
-                                <option>Producao</option>
-                            </select>
-
-                            <div id="step" class="row">
-                                <div class="col-md-12">
-                                    <table>
-                                        <tbody>
-                                            <input id="form:botao" name="form:botao" type="submit" value="Next" class="btn btn-primary btn-success" />
-                                        </tbody>
-                                    </table>
-                        </tbody>
-                    </table>
-                    <input type="hidden" name="form_SUBMIT" value="1" />
-                </form>
-                -->
-
-
-
+ 
             </div>
         </div>
         </div>
