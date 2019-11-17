@@ -4,11 +4,12 @@ import bottle
 #import sys
 import os
 import socket
-#import requests
-#import json
-#import http.client
+import requests
+import json
+import http.client
 from PyPDF2 import PdfFileWriter, PdfFileReader
 import io
+import uuid
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
@@ -51,15 +52,9 @@ def scancard():
     info = {'option': 'option' } 
     cardnumber = request.forms.get("form:cardnumber")
     #Get Account Number using CardNumber. Use API or get from Watson Data
-    #conn = http.client.HTTPSConnection("service.us.apiconnect.ibmcloud.com")
-    #headers = {
-    #'x-ibm-client-id': "4ce73542-13ef-4ae1-bb25-26fe9c6f5164",
-    #'accept': "application/json"
-    #}
-    #conn.request("GET", "/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber=38383", headers=headers)
-    #res = conn.getresponse()
-    #data = res.read()
-    #print (data)    
+    #url='https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber='+account_no'
+    #resp=requests.get(url, headers=headers, params={'q': 'debitcardNumber='+account_no}).json()
+    #print (resp['bankAccountNumber'])   
     accountnumber = cardnumber
     if accountnumber:
       response.set_cookie("account", accountnumber, secret=COOKIESECRET)
@@ -153,17 +148,45 @@ hostname=socket.gethostname()
 #hostname='localhost'
 
 def generate_pdf(account_no):
+  #Get Account Number using CardNumber. Use API or get from Watson Data
+  print (account_no)
+  headers = {
+    'x-ibm-client-id': "4ce73542-13ef-4ae1-bb25-26fe9c6f5164",
+    'accept': "application/json"
+  }
+  conn=http.client.HTTPSConnection('service.us.apiconnect.ibmcloud.com')
+  conn.request('GET','/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber='+account_no,
+                headers=headers)
+  result=conn.getresponse().read()
+  data=result.decode('utf+8')
+  resp=json.loads(data)
+  print (resp)
+  if resp['bankAccountNumber']:
+    AccountNumber = resp['bankAccountNumber']
+  else:
+    AccountNumber = account_no  
+  if resp['address']:
+    address = resp['address']
+  else:
+    address = "145 Generic St. Coquitlam, BC"
+  if resp['lastName']:
+    name = resp['lastName'] + ', ' + resp['firstName']
+  else:
+    Name = "Jordan, Michael"    
+  print (resp['lastName'])
+  print (name)  
+
   packet = io.BytesIO()
   # create a new PDF with Reportlab
   can = canvas.Canvas(packet, pagesize=letter)
-  can.drawString(35, 848, 'Jordan, Michael')
+  can.drawString(35, 848, name)
   can.drawString(470, 848, '604-777-7777')
-  can.drawString(35, 822, '777 Ottawa St. Surrey, BC')
+  can.drawString(35, 822, address)
   can.drawString(470, 822, 'V4A5W7')
   can.drawString(35, 798, 'TD Canada')
   can.drawString(325, 798, '123')
   can.drawString(395, 798, '12345')
-  can.drawString(470, 798, account_no)
+  can.drawString(460, 798, AccountNumber)
   can.drawString(35, 754, 'Insurance Corporation of British Columbia')
   can.drawString(35, 730, '151 Esplanade W, North Vancouver, BC ')
   can.drawString(325, 730, 'V7M1A2')
@@ -184,7 +207,9 @@ def generate_pdf(account_no):
   page.mergePage(new_pdf.getPage(0))
   output.addPage(page)
   # finally, write "output" to a real file
-  outputStream = open('./static/PAD_target.pdf', 'wb')
+  fileName='./static/'+str(uuid.uuid4())+'.pdf'
+  print (fileName)
+  outputStream = open(fileName, 'wb')
   output.write(outputStream)
   outputStream.close()    
 
