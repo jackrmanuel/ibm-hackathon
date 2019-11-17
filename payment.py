@@ -9,7 +9,6 @@ import json
 import http.client
 from PyPDF2 import PdfFileWriter, PdfFileReader
 import io
-import uuid
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
@@ -207,7 +206,7 @@ def generate_pdf(account_no):
   page.mergePage(new_pdf.getPage(0))
   output.addPage(page)
   # finally, write "output" to a real file
-  fileName='./static/'+str(uuid.uuid4())+'.pdf'
+  fileName='./static/PAD_target.pdf'
   print (fileName)
   outputStream = open(fileName, 'wb')
   output.write(outputStream)
