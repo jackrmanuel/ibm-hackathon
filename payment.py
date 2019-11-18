@@ -11,6 +11,7 @@ from PyPDF2 import PdfFileWriter, PdfFileReader
 import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+import uuid
 
 ############################################################################################################
 
@@ -35,11 +36,11 @@ def initial():
   if option == 'DebitCard':
     return template('scancard.html',info,urlnext="/scancard",percent="10",message="Swipe/Tap Debit Card")
   if option == 'QRCode':
-    return template('scancard.html',info,urlnext="/scancard",percent="10",message="Scan QR Code")  
+    return template('qrcode.html',info,urlnext="/pinform",percent="10",message="Scan QR Code")  
   if option == 'ScanAccountNumber':
     return template('scancard.html',info,urlnext="/scancard",percent="10",message="Scan QR Code")      
   if option == 'FacialRecognition':
-    return template('scancard.html',info,urlnext="/scancard",percent="10",message="Scan QR Code")      
+    return template('qrcode.html',info,urlnext="/pinform",percent="10",message="Scan QR Code")      
   if option == 'TypeAccountNumber':
     return template('accountnumber.html',info,urlnext="/accountnumber",percent="10",message="Type Account Number")   
   
@@ -121,12 +122,12 @@ def printform():
 def displayform():
   accountnumber = request.get_cookie("account", secret=COOKIESECRET)
   if accountnumber:
-    generate_pdf(accountnumber)      
+    fileName = '/static/' + generate_pdf(accountnumber)      
     percent = 100
     log_array = []  
     log_array.append('PAD Form printed.')  
     info = {'accountnumber': accountnumber } 
-    return template('pdfdisplay.html',info,percent=percent,message=log_array)
+    return template('pdfdisplay.html',info,percent=percent,fileName=fileName)
   else:
     return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid account. Access denied..</p>"    
 
@@ -147,6 +148,7 @@ hostname=socket.gethostname()
 #hostname='localhost'
 
 def generate_pdf(account_no):
+  fileName = str(uuid.uuid4())+'.pdf'
   #Get Account Number using CardNumber. Use API or get from Watson Data
   print (account_no)
   headers = {
@@ -159,21 +161,16 @@ def generate_pdf(account_no):
   result=conn.getresponse().read()
   data=result.decode('utf+8')
   resp=json.loads(data)
+  #resp = ''
   print (resp)
-  if resp['bankAccountNumber']:
+  if resp:
     AccountNumber = resp['bankAccountNumber']
-  else:
-    AccountNumber = account_no  
-  if resp['address']:
     address = resp['address']
-  else:
-    address = "145 Generic St. Coquitlam, BC"
-  if resp['lastName']:
     name = resp['lastName'] + ', ' + resp['firstName']
   else:
-    Name = "Jordan, Michael"    
-  print (resp['lastName'])
-  print (name)  
+    AccountNumber = account_no  
+    address = "145 Generic St. Coquitlam, BC"
+    name = "Jordan, Michael"   
 
   packet = io.BytesIO()
   # create a new PDF with Reportlab
@@ -206,11 +203,12 @@ def generate_pdf(account_no):
   page.mergePage(new_pdf.getPage(0))
   output.addPage(page)
   # finally, write "output" to a real file
-  fileName='./static/PAD_target.pdf'
+  completePathfileName='./static/'+fileName
   print (fileName)
-  outputStream = open(fileName, 'wb')
+  outputStream = open(completePathfileName, 'wb')
   output.write(outputStream)
   outputStream.close()    
+  return fileName
 
 def fix_environ_middleware(app):
   def fixed_app(environ, start_response):
