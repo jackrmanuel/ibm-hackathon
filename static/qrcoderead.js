@@ -1,7 +1,7 @@
 let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
 scanner.addListener('scan', function (content) {
   document.getElementById('form:accountnumber').value =content; 
-  document.getElementById("form:button").click();
+  document.getElementById('form:button').click();
 });
 Instascan.Camera.getCameras().then(function (cameras) {
   if (cameras.length > 0) {

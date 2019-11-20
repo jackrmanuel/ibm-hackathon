@@ -38,9 +38,9 @@ def initial():
   if option == 'QRCode':
     return template('qrcode.html',info,urlnext="/qrcode",percent="10",message="Scan QR Code")  
   if option == 'ScanAccountNumber':
-    return template('scancard.html',info,urlnext="/scancard",percent="10",message="Scan QR Code")      
+    return template('qrcode.html',info,urlnext="/qrcode",percent="10",message="ScanAccountNumber")      
   if option == 'FacialRecognition':
-    return template('qrcode.html',info,urlnext="/pinform",percent="10",message="Scan QR Code")      
+    return template('qrcode.html',info,urlnext="/pinform",percent="10",message="FacialRecognition")      
   if option == 'TypeAccountNumber':
     return template('accountnumber.html',info,urlnext="/accountnumber",percent="10",message="Type Account Number")   
   
