@@ -36,7 +36,7 @@ def initial():
   if option == 'DebitCard':
     return template('scancard.html',info,urlnext="/scancard",percent="10",message="Swipe/Tap Debit Card")
   if option == 'QRCode':
-    return template('qrcode.html',info,urlnext="/pinform",percent="10",message="Scan QR Code")  
+    return template('qrcode.html',info,urlnext="/qrcode",percent="10",message="Scan QR Code")  
   if option == 'ScanAccountNumber':
     return template('scancard.html',info,urlnext="/scancard",percent="10",message="Scan QR Code")      
   if option == 'FacialRecognition':
@@ -66,6 +66,29 @@ def scancard():
       return template('message.html',info,urlnext="/",percent=100,message="Invalid card. Please swipe a valid card.")    
   else:
     return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid card. Access denied.</p>"  
+
+@post('/qrcode')
+def qrcode():
+  print('QRCode')
+  option = request.get_cookie("account", secret=COOKIESECRET)
+  if option:
+    info = {'option': 'option' } 
+    accountnumber = request.forms.get("form:accountnumber")
+    print (accountnumber)
+    #Verify if it is a valid account number
+    if accountnumber:
+      response.set_cookie("account", accountnumber, secret=COOKIESECRET)
+      info = {'accountnumber': accountnumber }     
+      return template('message.html',info,urlnext="/pinform",percent="10",message="Account number "+accountnumber)
+    else:
+      info = {'accountnumber': accountnumber }
+      print ('No account number')
+      #return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid Account number.</p>"
+      return template('message.html',info,urlnext="/",percent=100,message="Invalid account.")    
+  else:
+    print ('no option')
+    return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid account. Access denied.</p>"  
+
 
 @post('/accountnumber')
 def accountnumber():
@@ -225,5 +248,6 @@ if DEBUG == 'YES':
 else:
     bottledebug=False
 
-run(host=hostname, port=TCP_PORT, debug=bottledebug, reloader=True)
+#run(host=hostname, port=TCP_PORT, debug=bottledebug, reloader=True)
+run(host='localhost', port=TCP_PORT, debug=bottledebug, reloader=True)
 
