@@ -51,8 +51,13 @@
                             <tr>
                                 <td>
                                     <select name="form:InstitutionNo">
-                                        <option value="003">003</option>
-                                        <option value="004">004</option>                                                                            
+                                        <option value="001">001 – Bank of Montreal (BMO)</option>
+                                        <option value="002">002 – The Bank of Nova Scotia (Scotiabank)</option>                                        
+                                        <option value="003">003 – Royal Bank of Canada (RBC)</option>   
+                                        <option value="004">004 – Toronto-Dominion Canada Trust (TD)</option>   
+                                        <option value="010">006 – National Bank of Canada (NBC)</option>
+                                        <option value="010">010 – National Bank of Canada (NBC)</option>                                        
+                                        <option value="016">016 – HSBC</option>                                                                                                                                                                                                          
                                 </select>
                                 </td>     
                             </tr>                                                             
@@ -61,13 +66,11 @@
                                     <label for="valorVariavel">Transit Number</label>
                                 </td>
                             </tr>
-                            <tr>
-                                <td>
-                                    <select name="form:TransitNo">
-                                        <option value="00002">00002</option>
-                                        <option value="94480">94480</option>                                                                            
-                                    </select>
-                                </td>                            
+                            <tr>                   
+                                    <td>
+                                        <input type="text" name="form:TransitNo" 
+                                               class="form-control" required />
+                                    </td>                     
                             <tr>
                                 <td>
                                     <label for="valorVariavel">Account Number</label>

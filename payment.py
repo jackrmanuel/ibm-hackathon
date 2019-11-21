@@ -12,7 +12,7 @@ import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 #import uuid
-import webbrowser
+#import webbrowser
 import re
 
 ############################################################################################################
@@ -65,6 +65,7 @@ def scancard():
     readcard = request.forms.get("form:cardnumber")
     cardnumber = str.split(readcard,'=')[0]
     cardnumber = re.sub('[^A-Za-z0-9]+', '', cardnumber)
+    cardnumber = cardnumber[0:20]
     accountnumber = cardnumber
     print (accountnumber)
     print (cardnumber)
@@ -116,6 +117,7 @@ def accountnumber():
     instNo = request.forms.get("form:InstitutionNo")
     TransNo = request.forms.get("form:TransitNo")
     #Remove Special Characters
+    TransNo = re.sub('[^A-Za-z0-9]+', '', TransNo)
     accountnumber = re.sub('[^A-Za-z0-9]+', '', accountnumber)
     #Verify if it is a valid account number
     if ApiAccountCall(accountnumber,instNo,TransNo):
