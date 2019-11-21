@@ -11,7 +11,9 @@ from PyPDF2 import PdfFileWriter, PdfFileReader
 import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-import uuid
+#import uuid
+import webbrowser
+import re
 
 ############################################################################################################
 
@@ -19,7 +21,17 @@ DEBUG = 'YES'
 TCP_PORT = 8080
 rootdir = os.getcwd()+"/static/"
 COOKIESECRET='VvCXyOw4LlevVYlgEDwVPvjv42oqbHVIggzb'
-
+#global AccountNumber, address, name, bankName, primaryPhone, institutionNo, transitNo, monthPayment, postalCode
+AccountNumber = ''
+address = ''
+name = ''
+name = ''
+bankName = ''
+primaryPhone = ''
+institutionNo = ''
+transitNo = ''
+monthPayment = ''
+postalCode = ''
 # 0
 @route('/')
 def root():
@@ -51,19 +63,19 @@ def scancard():
   if option:
     info = {'option': 'option' } 
     cardnumber = request.forms.get("form:cardnumber")
-    #Get Account Number using CardNumber. Use API or get from Watson Data
-    #url='https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber='+account_no'
-    #resp=requests.get(url, headers=headers, params={'q': 'debitcardNumber='+account_no}).json()
-    #print (resp['bankAccountNumber'])   
+    cardnumber = str.split(cardnumber,'=')[0]
+    cardnumber = re.sub('[^A-Za-z0-9]+', '', cardnumber)
     accountnumber = cardnumber
-    if accountnumber:
+    print (accountnumber+':'+cardnumber)
+
+    if ApiCardCall(accountnumber):
       response.set_cookie("account", accountnumber, secret=COOKIESECRET)
       info = {'accountnumber': accountnumber }     
       return template('message.html',info,urlnext="/pinform",percent="10",message="Valid card swiped.")
     else:
       info = {'accountnumber': accountnumber }
-      #return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid card. Please swipe a valid card</p>"
-      return template('message.html',info,urlnext="/",percent=100,message="Invalid card. Please swipe a valid card.")    
+      webbrowser.open('https://assistant-chat-us-south.watsonplatform.net/web/public/1c9e40a5-9fdb-43f1-b776-10462cfa5012', new=2)
+      return template('message.html',info,urlnext="/",percent=100,message="Invalid card. Please swipe a valid card.")          
   else:
     return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid card. Access denied.</p>"  
 
@@ -74,11 +86,14 @@ def qrcode():
   if option:
     info = {'option': 'option' } 
     accountnumber = request.forms.get("form:accountnumber")
+    #Remove Special Characters
+    accountnumber = re.sub('[^A-Za-z0-9]+', '', accountnumber)    
     print (accountnumber)
-    #Verify if it is a valid account number
-    if accountnumber:
+    #For simplicity just used card number in QRcode and search
+    if ApiCardCall(accountnumber):
       response.set_cookie("account", accountnumber, secret=COOKIESECRET)
-      info = {'accountnumber': accountnumber }     
+      info = {'accountnumber': accountnumber }  
+      webbrowser.open('https://assistant-chat-us-south.watsonplatform.net/web/public/df4179f7-6baa-41ff-8060-e5aa5536970f', new=2)   
       return template('message.html',info,urlnext="/pinform",percent="10",message="Account number "+accountnumber)
     else:
       info = {'accountnumber': accountnumber }
@@ -97,13 +112,18 @@ def accountnumber():
   if option:
     info = {'option': 'option' } 
     accountnumber = request.forms.get("form:accountnumber")
+    instNo = request.forms.get("form:InstitutionNo")
+    TransNo = request.forms.get("form:TransitNo")
+    #Remove Special Characters
+    accountnumber = re.sub('[^A-Za-z0-9]+', '', accountnumber)
     #Verify if it is a valid account number
-    if accountnumber:
+    if ApiAccountCall(accountnumber,instNo,TransNo):
       response.set_cookie("account", accountnumber, secret=COOKIESECRET)
       info = {'accountnumber': accountnumber }     
       return template('message.html',info,urlnext="/pinform",percent="10",message="Account number "+accountnumber)
     else:
       info = {'accountnumber': accountnumber }
+      webbrowser.open('https://assistant-chat-us-south.watsonplatform.net/web/public/df4179f7-6baa-41ff-8060-e5aa5536970f', new=2)
       #return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid Account number.</p>"
       return template('message.html',info,urlnext="/",percent=100,message="Invalid account.")    
   else:
@@ -140,17 +160,57 @@ def printform():
   else:
     return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid account. Access denied..</p>"
 
-
 @route('/displayform')
 def displayform():
+  print ('Display form')
   accountnumber = request.get_cookie("account", secret=COOKIESECRET)
   if accountnumber:
-    fileName = '/static/' + generate_pdf(accountnumber)      
+    print ('PAD_unsign')
+    fileName = '/static/_PAD_unsign.pdf'      
+    generate_pdf(accountnumber)
     percent = 100
     log_array = []  
     log_array.append('PAD Form printed.')  
     info = {'accountnumber': accountnumber } 
     return template('pdfdisplay.html',info,percent=percent,fileName=fileName)
+  else:
+    return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid account. Access denied..</p>"    
+
+@route('/PADsign')
+def PADsign():
+  accountnumber = request.get_cookie("account", secret=COOKIESECRET)
+  if accountnumber:
+    fileName = '/static/PAD_unsign.pdf'     
+    percent = 100
+    log_array = []  
+    log_array.append('PAD Form signed.')  
+    info = {'accountnumber': accountnumber } 
+    return template('pdfsign.html',info,percent=percent,fileName=fileName)
+  else:
+    return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid account. Access denied..</p>"        
+
+@post('/displaysignform')
+def displaysignform():
+  print ('Display Signed form')
+  accountnumber = request.get_cookie("account", secret=COOKIESECRET)
+  #displaysignform
+  if accountnumber:
+    print ('PAD_sign')
+    fileName = '/static/_PAD_unsign.pdf'      
+    sign = request.forms.get("form:sign")
+    print (sign)
+    if sign == 'sign':
+      print ('Signed')
+      sign_pdf()
+      percent = 100
+      log_array = []  
+      log_array.append('PAD Form printed.')  
+      info = {'accountnumber': accountnumber } 
+      return template('signeddisplay.html',info,percent=percent,fileName=fileName)
+      #displaysignform
+    else:
+      print ('Cancel')     
+      return "<meta http-equiv='refresh' content='2;url=/' /><p>Cancelled..</p>"    
   else:
     return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid account. Access denied..</p>"    
 
@@ -170,41 +230,25 @@ def server_static(filepath):
 hostname=socket.gethostname()
 #hostname='localhost'
 
-def generate_pdf(account_no):
-  fileName = str(uuid.uuid4())+'.pdf'
+def generate_pdf(card_no):
+  global AccountNumber, address, name, bankName, primaryPhone, institutionNo, transitNo, monthPayment, postalCode
+  #fileName = str(uuid.uuid4())+'.pdf'
+  fileName = 'PAD_unsign.pdf'
   #Get Account Number using CardNumber. Use API or get from Watson Data
-  print (account_no)
-  headers = {
-    'x-ibm-client-id': "4ce73542-13ef-4ae1-bb25-26fe9c6f5164",
-    'accept': "application/json"
-  }
-  conn=http.client.HTTPSConnection('service.us.apiconnect.ibmcloud.com')
-  conn.request('GET','/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber='+account_no,
-                headers=headers)
-  result=conn.getresponse().read()
-  data=result.decode('utf+8')
-  resp=json.loads(data)
-  #resp = ''
-  print (resp)
-  if resp:
-    AccountNumber = resp['bankAccountNumber']
-    address = resp['address']
-    name = resp['lastName'] + ', ' + resp['firstName']
-  else:
-    AccountNumber = account_no  
-    address = "145 Generic St. Coquitlam, BC"
-    name = "Jordan, Michael"   
+  print (card_no)
+  print ('GENERATE PDF')
+  #APICall(account_no)
 
   packet = io.BytesIO()
   # create a new PDF with Reportlab
   can = canvas.Canvas(packet, pagesize=letter)
   can.drawString(35, 848, name)
-  can.drawString(470, 848, '604-777-7777')
+  can.drawString(470, 848, primaryPhone)
   can.drawString(35, 822, address)
-  can.drawString(470, 822, 'V4A5W7')
-  can.drawString(35, 798, 'TD Canada')
-  can.drawString(325, 798, '123')
-  can.drawString(395, 798, '12345')
+  can.drawString(470, 822, postalCode)
+  can.drawString(35, 798, bankName)
+  can.drawString(325, 798, institutionNo)
+  can.drawString(395, 798, transitNo)
   can.drawString(460, 798, AccountNumber)
   can.drawString(35, 754, 'Insurance Corporation of British Columbia')
   can.drawString(35, 730, '151 Esplanade W, North Vancouver, BC ')
@@ -212,7 +256,7 @@ def generate_pdf(account_no):
   can.drawString(470, 730, '604-888-8888')
   can.drawString(290, 667, 'x')
   can.drawString(37, 620, 'x')
-  can.drawString(122, 620, '125.00')
+  can.drawString(122, 620, monthPayment)
   can.drawString(145, 586, 'x')
   can.save()
   #move to the beginning of the StringIO buffer
@@ -226,12 +270,121 @@ def generate_pdf(account_no):
   page.mergePage(new_pdf.getPage(0))
   output.addPage(page)
   # finally, write "output" to a real file
-  completePathfileName='./static/'+fileName
+  completePathfileName='./static/PAD_unsign.pdf'
   print (fileName)
   outputStream = open(completePathfileName, 'wb')
   output.write(outputStream)
   outputStream.close()    
   return fileName
+
+def ApiCardCall(card_no):
+  global AccountNumber, address, name, bankName, primaryPhone, institutionNo, transitNo, monthPayment, postalCode
+  headers = { 'x-ibm-client-id': "d00ed2e3-a4b8-4abf-84dd-9821603ba6f2", 'accept': "application/json" } 
+  url="/gws/apigateway/api/52a97357d94f73eb250a91be334dc75ba12f265192661af5af426d7b3cd54a7a/OXaNVx/CustomerBankInfo/"+card_no
+  server='service.us.apiconnect.ibmcloud.com'
+  conn=http.client.HTTPSConnection(server)
+  conn.request("GET", url, headers=headers) 
+  #conn.request('GET','/gws/apigateway/api/c0b78651e1904db457f52363cf9c26f7aa9723145f347166ca9885ac82cdb3c0/H2ncOL/customer/getCustomerBankInformation?debitcardNumber='+account_no,
+  #              headers=headers)
+
+  print(url)
+  print(server)
+  result=conn.getresponse().read()
+  data=result.decode('utf+8')
+  resp=json.loads(data)
+  #resp = ''
+  
+  print (resp)
+  if resp['bankAccountNumber']:
+    AccountNumber = resp['bankAccountNumber']
+    address = resp['address']
+    name = resp['lastName'] + ', ' + resp['firstName']
+    bankName = resp['bankName']
+    primaryPhone = resp['primaryPhone']
+    institutionNo = resp['institutionNo']
+    transitNo = resp['transitNo']
+    monthPayment = resp['monthPayment']
+    postalCode = resp['postalCode']
+    print ('Printing Name')
+    print (name)
+    return True
+  else:
+    #AccountNumber = account_no  
+    #address = '145 Generic St. Coquitlam, BC'
+    #name = 'Jordan, Michael'   
+    #bankName = 'Toronto-Dominion Bank (TD Canada Trust)'
+    #primaryPhone = '604-874-1432'
+    #institutionNo = '0004'
+    #transitNo = '94480'
+    #monthPayment = '150.00'
+    #postalCode = 'V9H4G2'  
+    return False
+
+def ApiAccountCall(account_no, instNo, transNo):
+  global AccountNumber, address, name, bankName, primaryPhone, institutionNo, transitNo, monthPayment, postalCode
+  headers = { 'x-ibm-client-id': "d00ed2e3-a4b8-4abf-84dd-9821603ba6f2", 'accept': "application/json" } 
+  url='/gws/apigateway/api/52a97357d94f73eb250a91be334dc75ba12f265192661af5af426d7b3cd54a7a/OXaNVx/CustomerBankInfo/GetCustomerBankInfo?bankAccountNumber='+account_no+'&institutionNo='+instNo+'&transitNo='+transNo
+  server='service.us.apiconnect.ibmcloud.com'
+  conn=http.client.HTTPSConnection(server)
+  conn.request("GET", url, headers=headers) 
+  
+  print(url)
+  print(server)
+  result=conn.getresponse().read()
+  data=result.decode('utf+8')
+  resp=json.loads(data)
+  #resp = ''
+  
+  print (resp)
+  if resp['bankAccountNumber']:
+    AccountNumber = resp['bankAccountNumber']
+    address = resp['address']
+    name = resp['lastName'] + ', ' + resp['firstName']
+    bankName = resp['bankName']
+    primaryPhone = resp['primaryPhone']
+    institutionNo = resp['institutionNo']
+    transitNo = resp['transitNo']
+    monthPayment = resp['monthPayment']
+    postalCode = resp['postalCode']
+    print ('Printing Name')
+    print (name)
+    return True
+  else:
+    #AccountNumber = account_no  
+    #address = '145 Generic St. Coquitlam, BC'
+    #name = 'Jordan, Michael'   
+    #bankName = 'Toronto-Dominion Bank (TD Canada Trust)'
+    #primaryPhone = '604-874-1432'
+    #institutionNo = '0004'
+    #transitNo = '94480'
+    #monthPayment = '150.00'
+    #postalCode = 'V9H4G2'  
+    return False    
+
+def sign_pdf():
+  print ('SIGNING')
+
+  packet = io.BytesIO()
+  # create a new PDF with Reportlab
+  can = canvas.Canvas(packet, pagesize=letter)
+  can.drawString(370, 306, 'Digitally Signed')
+  can.drawString(515, 306, '19-11-19')
+  can.save()
+  #move to the beginning of the StringIO buffer
+  packet.seek(0)
+  new_pdf = PdfFileReader(packet)
+  # read your existing PDF
+  existing_pdf = PdfFileReader(open("./static/PAD_unsign.pdf", "rb"))
+  output = PdfFileWriter()
+  # add the "watermark" (which is the new pdf) on the existing page
+  page = existing_pdf.getPage(0)
+  page.mergePage(new_pdf.getPage(0))
+  output.addPage(page)
+  # finally, write "output" to a real file
+  completePathfileName='./static/PAD_sign.pdf'
+  outputStream = open(completePathfileName, 'wb')
+  output.write(outputStream)
+  outputStream.close()    
 
 def fix_environ_middleware(app):
   def fixed_app(environ, start_response):

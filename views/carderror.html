@@ -29,26 +29,26 @@
         </div> 
         <div class="collapse navbar-collapse justify-content-end">
             <ul class="navbar-nav">
-                <li class="nav-item active">     
-                    <a class="navbar-brand justify-content-end" align="right" href="/PADsign">Sign Digitally</a>   
-                    <a class="navbar-brand justify-content-end" align="right" 
-                        href="#" onclick="WatsonAssist()">Help </a>                                          
-                    <a class="navbar-brand justify-content-end" align="right" href="/logout">Exit</a>
+                <li class="nav-item active">
+                    <a class="navbar-brand justify-content-end" align="right" href="/logout">Cancel</a>
                 </li>
             </ul>
         </div>        
     </nav>
 
     <main role="main" class="container-fluid">
-        <div class="row">
-             </div>  
-                <a href="#" class="pull-left"> 
-                    <embed src="/static/PAD_unsign.pdf" width="1000px" height="1700px" type="application/pdf"/>
-                </a>  
-            </div>
+        <div class="row">    </div>
+        <div class="col-md-8">
+             
+                <label for="sel1"> {{message}} </label>
+                <meta http-equiv='refresh' content='2;url={{urlnext}}' />
+
         </div>
-        <script src="/static/digitalsign.js"></script>
+        <script>
+            alert('Incorrect')
+            window.open("https://assistant-chat-us-south.watsonplatform.net/web/public/1c9e40a5-9fdb-43f1-b776-10462cfa5012");     
+        </script>
     </main>
 </body>
-<script src="/static/watson.js"></script>
+
 </html>

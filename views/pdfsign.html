@@ -37,23 +37,20 @@
     <main role="main" class="container-fluid">
         <div class="row">
              <div class="col-md-8">
-               <form id="form" name="form" method="post" action="/initial" enctype="application/x-www-form-urlencoded">
+               <form id="form" name="form" method="post" action="/displaysignform" enctype="application/x-www-form-urlencoded">
                     <table class="form-group col-md-8">
                         <tbody>
                             <tr>
                                 <td>
                                 <h2>
-                                    <label for="valorVariavel">Generate PAD form:</label>
+                                    <label for="valorVariavel">Generate Signed PAD form:</label>
                                 </h2>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <input type="radio" name="form:option" value="DebitCard" value="" checked > Swipe/Tap Debit Card<br>
-                                    <input type="radio" name="form:option" value="QRCode"> Scan QR Code<br>
-                                    <input type="radio" name="form:option" value="TypeAccountNumber"> Type Account Number manually<br>
-                                    <input type="radio" name="form:option" value="ScanAccountNumber"> Scan Printed Account Number<br>                                   
-                                    <input type="radio" name="form:option" value="FacialRecognition"> Facial Recognition<br>
+                                    <input type="radio" name="form:sign" value="unsign" value="" checked > Cancel<br>
+                                    <input type="radio" name="form:sign" value="sign"> Agree to digitally sign PAD form<br>
                                 </td>
                             </tr>
                             <tr>
