@@ -62,11 +62,13 @@ def scancard():
   option = request.get_cookie("account", secret=COOKIESECRET)
   if option:
     info = {'option': 'option' } 
-    cardnumber = request.forms.get("form:cardnumber")
-    cardnumber = str.split(cardnumber,'=')[0]
+    readcard = request.forms.get("form:cardnumber")
+    cardnumber = str.split(readcard,'=')[0]
     cardnumber = re.sub('[^A-Za-z0-9]+', '', cardnumber)
     accountnumber = cardnumber
-    print (accountnumber+':'+cardnumber)
+    print (accountnumber)
+    print (cardnumber)
+    print (readcard)
 
     if ApiCardCall(accountnumber):
       response.set_cookie("account", accountnumber, secret=COOKIESECRET)
@@ -74,8 +76,8 @@ def scancard():
       return template('message.html',info,urlnext="/pinform",percent="10",message="Valid card swiped.")
     else:
       info = {'accountnumber': accountnumber }
-      webbrowser.open('https://assistant-chat-us-south.watsonplatform.net/web/public/1c9e40a5-9fdb-43f1-b776-10462cfa5012', new=2)
-      return template('message.html',info,urlnext="/",percent=100,message="Invalid card. Please swipe a valid card.")          
+      #webbrowser.open('https://assistant-chat-us-south.watsonplatform.net/web/public/1c9e40a5-9fdb-43f1-b776-10462cfa5012', new=2)
+      return template('carderror.html',info,urlnext="/",percent=100,message="Invalid card. Please swipe a valid card.")          
   else:
     return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid card. Access denied.</p>"  
 
@@ -93,13 +95,12 @@ def qrcode():
     if ApiCardCall(accountnumber):
       response.set_cookie("account", accountnumber, secret=COOKIESECRET)
       info = {'accountnumber': accountnumber }  
-      webbrowser.open('https://assistant-chat-us-south.watsonplatform.net/web/public/df4179f7-6baa-41ff-8060-e5aa5536970f', new=2)   
       return template('message.html',info,urlnext="/pinform",percent="10",message="Account number "+accountnumber)
     else:
       info = {'accountnumber': accountnumber }
       print ('No account number')
       #return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid Account number.</p>"
-      return template('message.html',info,urlnext="/",percent=100,message="Invalid account.")    
+      return template('accounterror.html',info,urlnext="/",percent=100,message="Invalid QR Code (account).")          
   else:
     print ('no option')
     return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid account. Access denied.</p>"  
@@ -123,9 +124,9 @@ def accountnumber():
       return template('message.html',info,urlnext="/pinform",percent="10",message="Account number "+accountnumber)
     else:
       info = {'accountnumber': accountnumber }
-      webbrowser.open('https://assistant-chat-us-south.watsonplatform.net/web/public/df4179f7-6baa-41ff-8060-e5aa5536970f', new=2)
+      #webbrowser.open('https://assistant-chat-us-south.watsonplatform.net/web/public/df4179f7-6baa-41ff-8060-e5aa5536970f', new=2)
       #return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid Account number.</p>"
-      return template('message.html',info,urlnext="/",percent=100,message="Invalid account.")    
+      return template('accounterror.html',info,urlnext="/",percent=100,message="Invalid QR Code (account).")          
   else:
     return "<meta http-equiv='refresh' content='2;url=/' /><p>Invalid account. Access denied.</p>"  
 
@@ -292,6 +293,8 @@ def ApiCardCall(card_no):
   result=conn.getresponse().read()
   data=result.decode('utf+8')
   resp=json.loads(data)
+  conn.close()
+
   #resp = ''
   
   print (resp)
@@ -333,6 +336,7 @@ def ApiAccountCall(account_no, instNo, transNo):
   result=conn.getresponse().read()
   data=result.decode('utf+8')
   resp=json.loads(data)
+  conn.close()
   #resp = ''
   
   print (resp)
